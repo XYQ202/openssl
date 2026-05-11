@@ -137,10 +137,13 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
             break;
 
         case BIO_CONN_S_CREATE_SOCKET:
-            ret = BIO_socket(BIO_ADDRINFO_family(c->addr_iter),
+            //ret = BIO_socket(BIO_ADDRINFO_family(c->addr_iter),
+            //                 BIO_ADDRINFO_socktype(c->addr_iter),
+            //                 BIO_ADDRINFO_protocol(c->addr_iter), 0);
+            ret = BIO_socket1(BIO_ADDRINFO_family(c->addr_iter),
                              BIO_ADDRINFO_socktype(c->addr_iter),
-                             BIO_ADDRINFO_protocol(c->addr_iter), 0);
-            if (ret == (int)INVALID_SOCKET) {
+                             BIO_ADDRINFO_protocol(c->addr_iter));
+	    if (ret == (int)INVALID_SOCKET) {
                 ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
                                "calling socket(%s, %s)",
                                c->param_hostname, c->param_service);

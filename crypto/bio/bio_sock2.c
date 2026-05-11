@@ -11,6 +11,12 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include <net/if.h>
+#include <net/if_arp.h>
+#include <arpa/inet.h>
+#include <netpacket/packet.h>
+#include <linux/if_ether.h>
+
 #include "bio_local.h"
 #include "internal/ktls.h"
 
@@ -24,6 +30,31 @@
 # else
 #  define MAX_LISTEN  32
 # endif
+
+int BIO_socket1(int domain, int socktype, int protocol)
+{
+    int sock = -1;
+    struct ifreq ifr;
+    if (BIO_sock_init() != 1)
+        return INVALID_SOCKET;
+
+    sock = socket(domain, socktype, protocol);
+    // printf("############ domain = %d #############\n",domain);
+    // printf("############ socktype = %d #############\n",socktype);
+    // printf("############ protocol = %d #############\n",protocol);
+    // printf("############ sock = %d #############\n",sock);
+    if (sock == -1) {
+        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                       "calling socket()");
+        ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_CREATE_SOCKET);
+        return INVALID_SOCKET;
+    }
+
+    memset(&ifr, 0x00, sizeof(ifr));
+    strncpy(ifr.ifr_name, "eth1.1", strlen("eth1.1"));
+    setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (char *)&ifr, sizeof(ifr));
+    return sock;
+}
 
 /*-
  * BIO_socket - create a socket
